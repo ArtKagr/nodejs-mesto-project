@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
+import { Error } from 'mongoose';
 import User, { IUser } from '../models/user';
 import NotFoundError from '../helpers/errors/NotFoundError';
 import ClientError from '../helpers/errors/ClientError';
-import { Error } from 'mongoose';
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -53,10 +53,11 @@ export const updateUserProfile = async (req: Request, res: Response, next: NextF
 
     const result = await User.updateOne({ _id: userId }, { name, about });
 
-    if (result.modifiedCount === 0) {
+    if (result.modifiedCount > 0) {
+      res.send({ message: 'Профиль успешно обновлён' });
+    } else {
       throw new NotFoundError('Профиль не был обновлён');
     }
-    res.send({ message: 'Профиль успешно обновлён' });
   } catch (error) {
     if (error instanceof Error.ValidationError) {
       throw new ClientError('Переданы некорректные данные при обновлении пользователя');
