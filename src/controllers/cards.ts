@@ -53,17 +53,11 @@ export const likeCard = async (req: Request, res: Response, next: NextFunction) 
     const { cardId } = req.params;
     const userId = req.user._id;
 
-    const card: ICard | null = await Card.findByIdAndUpdate(
-      cardId,
-      { $addToSet: { likes: userId } },
-      { new: true },
-    );
+    const card: ICard | null = await Card
+      .findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
+      .orFail(() => new NotFoundError('Передан несуществующий _id карточки'))
 
-    if (!card) {
-      throw new NotFoundError('Передан несуществующий _id карточки');
-    }
-
-    res.send({ message: 'Лайк поставлен' });
+    res.send({ data: card });
   } catch (error) {
     if (error instanceof Error.CastError) {
       next(new ClientError('Некорректный идентификатор карточки'));
@@ -78,17 +72,11 @@ export const dislikeCard = async (req: Request, res: Response, next: NextFunctio
     const { cardId } = req.params;
     const userId = req.user._id;
 
-    const card: ICard | null = await Card.findByIdAndUpdate(
-      cardId,
-      { $pull: { likes: userId } },
-      { new: true },
-    );
+    const card: ICard | null = await Card
+      .findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
+      .orFail(() => new NotFoundError('Передан несуществующий _id карточки'))
 
-    if (!card) {
-      throw new NotFoundError('Передан несуществующий _id карточки');
-    }
-
-    res.send({ message: 'Лайк снят' });
+    res.send({ data: card });
   } catch (error) {
     if (error instanceof Error.CastError) {
       next(new ClientError('Некорректный идентификатор карточки'));

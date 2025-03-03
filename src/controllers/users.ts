@@ -15,11 +15,9 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction) 
 
 export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user: IUser | null = await User.findById(req.params.userId);
-
-    if (!user) {
-      throw new NotFoundError('Пользователь не найден');
-    }
+    const user: IUser | null = await User
+      .findById(req.params.userId)
+      .orFail(() => new NotFoundError('Пользователь не найден'));
 
     res.send({ data: user });
   } catch (error) {
