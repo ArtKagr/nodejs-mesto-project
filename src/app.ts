@@ -15,9 +15,6 @@ mongoose.connect('mongodb://localhost:27017/mestodb');
 app.use((req: Request, res: Response, next: NextFunction) => {
   req.user = {
     _id: '67c2ebbf8d4c8c652b22c142',
-    name: 'Тестовый пользователь',
-    about: 'Информация о себе',
-    avatar: 'https://i.pravatar.cc/150?img=3',
   };
 
   next();
@@ -26,7 +23,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
 
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ message: 'Страница не найдена' });
+});
+
+app.use((err: Error, _req: Request, res: Response) => {
   const { statusCode = 500, message } = err;
   res.status(statusCode).send({ message: statusCode === 500 ? 'На сервере произошла ошибка' : message });
 });

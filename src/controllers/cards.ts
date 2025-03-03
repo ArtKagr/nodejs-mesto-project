@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
+import { Error } from 'mongoose';
 import Card, { ICard } from '../models/card';
-import { NotFoundError, ClientError } from '../helpers/errors';
+import NotFoundError from '../helpers/errors/NotFoundError';
+import ClientError from '../helpers/errors/ClientError';
 
 export const getCards = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -16,14 +18,14 @@ export const createCard = async (req: Request, res: Response, next: NextFunction
     const { name, link } = req.body;
     const userId = req.user._id;
 
-    if (!name || !link) {
-      throw new ClientError('Переданы некорректные данные при создании карточки');
-    }
-
     const card: ICard = await Card.create({ name, link, owner: userId });
     res.send({ data: card });
   } catch (error) {
-    next(error);
+    if (error instanceof Error.ValidationError) {
+      throw new ClientError('Переданы некорректные данные при создании карточки');
+    } else {
+      next(error);
+    }
   }
 };
 
@@ -38,7 +40,11 @@ export const deleteCard = async (req: Request, res: Response, next: NextFunction
     }
     res.send({ message: 'Карточка удалена' });
   } catch (error) {
-    next(error);
+    if (error instanceof Error.CastError) {
+      next(new ClientError('Некорректный идентификатор карточки'));
+    } else {
+      next(error);
+    }
   }
 };
 
@@ -47,10 +53,6 @@ export const likeCard = async (req: Request, res: Response, next: NextFunction) 
     const { cardId } = req.params;
     const userId = req.user._id;
 
-    if (!userId) {
-      throw new ClientError('Переданы некорректные данные для постановки лайка');
-    }
-
     const card: ICard | null = await Card.findByIdAndUpdate(
       cardId,
       { $addToSet: { likes: userId } },
@@ -58,12 +60,16 @@ export const likeCard = async (req: Request, res: Response, next: NextFunction) 
     );
 
     if (!card) {
-      throw new ClientError('Передан несуществующий _id карточки');
+      throw new NotFoundError('Передан несуществующий _id карточки');
     }
 
     res.send({ message: 'Лайк поставлен' });
   } catch (error) {
-    next(error);
+    if (error instanceof Error.CastError) {
+      next(new ClientError('Некорректный идентификатор карточки'));
+    } else {
+      next(error);
+    }
   }
 };
 
@@ -72,14 +78,6 @@ export const dislikeCard = async (req: Request, res: Response, next: NextFunctio
     const { cardId } = req.params;
     const userId = req.user._id;
 
-    if (!cardId) {
-      throw new NotFoundError('Передан несуществующий _id карточки');
-    }
-
-    if (!userId) {
-      throw new ClientError('Переданы некорректные данные для снятия лайка');
-    }
-
     const card: ICard | null = await Card.findByIdAndUpdate(
       cardId,
       { $pull: { likes: userId } },
@@ -87,11 +85,15 @@ export const dislikeCard = async (req: Request, res: Response, next: NextFunctio
     );
 
     if (!card) {
-      throw new ClientError('Передан несуществующий _id карточки');
+      throw new NotFoundError('Передан несуществующий _id карточки');
     }
 
     res.send({ message: 'Лайк снят' });
   } catch (error) {
-    next(error);
+    if (error instanceof Error.CastError) {
+      next(new ClientError('Некорректный идентификатор карточки'));
+    } else {
+      next(error);
+    }
   }
 };

@@ -12,7 +12,9 @@ declare global {
   namespace Express {
     // eslint-disable-next-line no-unused-vars
     interface Request {
-      user: IUser;
+      user: {
+        _id: string;
+      }
     }
   }
 }

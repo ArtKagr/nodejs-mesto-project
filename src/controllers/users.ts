@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import User, { IUser } from '../models/user';
-import { NotFoundError, ClientError } from '../helpers/errors';
+import NotFoundError from '../helpers/errors/NotFoundError';
+import ClientError from '../helpers/errors/ClientError';
+import { Error } from 'mongoose';
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -21,7 +23,11 @@ export const getUserById = async (req: Request, res: Response, next: NextFunctio
 
     res.send({ data: user });
   } catch (error) {
-    next(error);
+    if (error instanceof Error.CastError) {
+      next(new ClientError('Некорректный id пользователя'));
+    } else {
+      next(error);
+    }
   }
 };
 
@@ -29,14 +35,14 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
   try {
     const { name, about, avatar } = req.body;
 
-    if (!name || !about || !avatar) {
-      throw new ClientError('Переданы некорректные данные при создании пользователя');
-    }
-
     const user: IUser = await User.create({ name, about, avatar });
     res.send({ data: user });
   } catch (error) {
-    next(error);
+    if (error instanceof Error.ValidationError) {
+      throw new ClientError('Переданы некорректные данные при создании пользователя');
+    } else {
+      next(error);
+    }
   }
 };
 
@@ -45,18 +51,18 @@ export const updateUserProfile = async (req: Request, res: Response, next: NextF
     const userId = req.user._id;
     const { name, about } = req.body;
 
-    if (!about && !name) {
-      throw new ClientError('Переданы некорректные данные при обновлении пользователя');
-    }
-
     const result = await User.updateOne({ _id: userId }, { name, about });
 
     if (result.modifiedCount === 0) {
-      throw new ClientError('Профиль не был обновлён');
+      throw new NotFoundError('Профиль не был обновлён');
     }
     res.send({ message: 'Профиль успешно обновлён' });
   } catch (error) {
-    next(error);
+    if (error instanceof Error.ValidationError) {
+      throw new ClientError('Переданы некорректные данные при обновлении пользователя');
+    } else {
+      next(error);
+    }
   }
 };
 
@@ -65,18 +71,18 @@ export const updateUserAvatar = async (req: Request, res: Response, next: NextFu
     const userId = req.user._id;
     const { avatar } = req.body;
 
-    if (!avatar) {
-      throw new ClientError('Переданы некорректные данные при обновлении аватара');
-    }
-
     const result = await User.updateOne({ _id: userId }, { avatar });
 
     if (result.modifiedCount > 0) {
       res.send({ message: 'Аватар успешно обновлён' });
     } else {
-      throw new ClientError('Аватар не был обновлён');
+      throw new NotFoundError('Аватар не был обновлён');
     }
   } catch (error) {
-    next(error);
+    if (error instanceof Error.ValidationError) {
+      throw new ClientError('Переданы некорректные данные при обновлении аватара');
+    } else {
+      next(error);
+    }
   }
 };
