@@ -1,24 +1,26 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
+
+import auth from './middlewares/auth';
 
 import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
 
+import { login, createUser } from './controllers/users';
+
 const { PORT = 3000 } = process.env;
 const app = express();
+
+mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-mongoose.connect('mongodb://localhost:27017/mestodb');
+app.use('/signin', login);
+app.use('/signup', createUser);
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-  req.user = {
-    _id: '67c2ebbf8d4c8c652b22c142',
-  };
-
-  next();
-});
+// @ts-ignore
+app.use(auth);
 
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
