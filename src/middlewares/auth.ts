@@ -1,14 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import UnauthorizedError from '../helpers/errors/UnauthorizedError';
+import { IUser } from '../models/user';
 
-// @ts-ignore
-interface SessionRequest extends Request {
-  user?: string | JwtPayload;
-}
-
-// eslint-disable-next-line consistent-return
-export default (req: SessionRequest, res: Response, next: NextFunction) => {
+export default (req: Request, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
@@ -18,10 +13,10 @@ export default (req: SessionRequest, res: Response, next: NextFunction) => {
   const token = authorization.replace('Bearer ', '');
 
   try {
-    req.user = jwt.verify(token, 'secret-key');
+    req.user = jwt.verify(token, 'secret-key') as IUser;
   } catch (_) {
     return next(new UnauthorizedError('Необходима авторизация'));
   }
 
-  next();
+  return next();
 };

@@ -19,7 +19,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/signin', login);
 app.use('/signup', createUser);
 
-// @ts-ignore
 app.use(auth);
 
 app.use('/users', usersRouter);
