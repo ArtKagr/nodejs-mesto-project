@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
-
+import cookieParser from 'cookie-parser';
 import auth from './middlewares/auth';
 import { requestLogger, errorLogger } from './middlewares/logger';
 
@@ -18,6 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(requestLogger);
+app.use(cookieParser());
 
 app.use('/signin', login);
 app.use('/signup', createUser);

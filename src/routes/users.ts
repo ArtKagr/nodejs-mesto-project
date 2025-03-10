@@ -9,7 +9,12 @@ const router = Router();
 router.get('/', getUsers);
 router.get('/:userId', celebrate({
   params: Joi.object().keys({
-    cardId: Joi.string().required(),
+    userId: Joi.string().required(),
+  }),
+}), getUserById);
+router.get('/me', celebrate({
+  params: Joi.object().keys({
+    userId: Joi.string().required(),
   }),
 }), getUserById);
 router.patch('/me', celebrate({

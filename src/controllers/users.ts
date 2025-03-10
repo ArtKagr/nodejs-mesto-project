@@ -44,7 +44,9 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
         email, password: hash, name, about, avatar,
       }))
       .then((user) => {
-        res.send({ data: user });
+        const { password: _, ...userWithoutPassword } = user.toObject();
+
+        res.status(201).send({ data: userWithoutPassword });
       })
       .catch((error) => next(error));
   } catch (error) {

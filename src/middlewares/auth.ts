@@ -10,7 +10,7 @@ export default (req: Request, res: Response, next: NextFunction) => {
     return next(new UnauthorizedError('Необходима авторизация'));
   }
 
-  const token = authorization.replace('Bearer ', '');
+  const { token } = req.cookies;
 
   try {
     req.user = jwt.verify(token, 'secret-key') as IUser;
