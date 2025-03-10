@@ -2,9 +2,11 @@ import bcrypt from 'bcryptjs';
 import { Request, Response, NextFunction } from 'express';
 import { Error } from 'mongoose';
 import jwt from 'jsonwebtoken';
+import { MongoError } from 'mongodb';
 import User, { IUser } from '../models/user';
 import NotFoundError from '../helpers/errors/NotFoundError';
 import ClientError from '../helpers/errors/ClientError';
+import ConflictError from '../helpers/errors/ConflictError';
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -46,7 +48,9 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
       })
       .catch((error) => next(error));
   } catch (error) {
-    if (error instanceof Error.ValidationError) {
+    if (error instanceof MongoError && error.code === 11000) {
+      next(new ConflictError('Такой пользователь уже зарегистрирован'));
+    } else if (error instanceof Error.ValidationError) {
       next(new ClientError('Переданы некорректные данные при создании пользователя'));
     } else {
       next(error);
