@@ -4,13 +4,11 @@ import UnauthorizedError from '../helpers/errors/UnauthorizedError';
 import { IUser } from '../models/user';
 
 export default (req: Request, res: Response, next: NextFunction) => {
-  const { authorization } = req.headers;
+  const { token } = req.cookies;
 
-  if (!authorization || !authorization.startsWith('Bearer ')) {
+  if (!token) {
     return next(new UnauthorizedError('Необходима авторизация'));
   }
-
-  const { token } = req.cookies;
 
   try {
     req.user = jwt.verify(token, 'secret-key') as IUser;
